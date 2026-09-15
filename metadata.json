@@ -1,0 +1,7 @@
+{
+  "name": "Basit AI",
+  "description": "یاریدەدەری زیرەکی کوردی - Kurdish AI Assistant with chat, daily facts, file analysis, and Killua-inspired companion",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
