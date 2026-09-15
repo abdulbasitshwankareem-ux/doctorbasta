@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.TableChart
@@ -64,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.ApiKeyDialog
 import com.example.ui.components.ChatMessageItem
 import com.example.ui.components.ChatInputBar
 import com.example.ui.components.DailyFactCard
@@ -100,6 +102,8 @@ fun ChatScreen(
     val dailyFact by viewModel.dailyFact.collectAsState()
     val attachedFile by viewModel.attachedFile.collectAsState()
     val showToolsDialog by viewModel.showToolsDialog.collectAsState()
+    val showApiKeyDialog by viewModel.showApiKeyDialog.collectAsState()
+    val showApiKeyScreen by viewModel.showApiKeyScreen.collectAsState()
 
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -113,6 +117,13 @@ fun ChatScreen(
 
     // Kurdish is Right-to-Left (RTL)
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        if (showApiKeyScreen) {
+            ApiKeyScreen(
+                onNavigateBack = { viewModel.setShowApiKeyScreen(false) }
+            )
+            return@CompositionLocalProvider
+        }
+
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
@@ -136,6 +147,10 @@ fun ChatScreen(
                         },
                         onDeleteConversation = { id ->
                             viewModel.deleteConversation(id)
+                        },
+                        onOpenApiKeyDialog = {
+                            scope.launch { drawerState.close() }
+                            viewModel.setShowApiKeyScreen(true)
                         }
                     )
                 }
@@ -187,6 +202,19 @@ fun ChatScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
+                                // API Key Settings Button (کلیلی زیرەکی دەستکرد)
+                                IconButton(
+                                    onClick = { viewModel.setShowApiKeyScreen(true) },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Key,
+                                        contentDescription = "کلیلی Gemini API",
+                                        tint = ElectricBlueGlow,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+
                                 // Google Sheets & Image Gen Tools Dialog Button
                                 IconButton(
                                     onClick = { viewModel.setShowToolsDialog(true) },
@@ -295,6 +323,9 @@ fun ChatScreen(
                                         },
                                         onCreateExcel = { content ->
                                             viewModel.createExcelForMessage(content, context)
+                                        },
+                                        onOpenApiKeyDialog = {
+                                            viewModel.setShowApiKeyScreen(true)
                                         }
                                     )
                                 }
@@ -318,6 +349,16 @@ fun ChatScreen(
                 onDismiss = { viewModel.setShowToolsDialog(false) },
                 onSendPrompt = { prompt ->
                     viewModel.sendMessage(prompt, context)
+                }
+            )
+        }
+
+        // Gemini API Key Dialog
+        if (showApiKeyDialog) {
+            ApiKeyDialog(
+                onDismiss = { viewModel.setShowApiKeyDialog(false) },
+                onSaved = {
+                    viewModel.setShowApiKeyDialog(false)
                 }
             )
         }

@@ -63,8 +63,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _showToolsDialog = MutableStateFlow(false)
     val showToolsDialog: StateFlow<Boolean> = _showToolsDialog.asStateFlow()
 
+    private val _showApiKeyDialog = MutableStateFlow(false)
+    val showApiKeyDialog: StateFlow<Boolean> = _showApiKeyDialog.asStateFlow()
+
+    private val _showApiKeyScreen = MutableStateFlow(false)
+    val showApiKeyScreen: StateFlow<Boolean> = _showApiKeyScreen.asStateFlow()
+
     fun setShowToolsDialog(show: Boolean) {
         _showToolsDialog.value = show
+    }
+
+    fun setShowApiKeyDialog(show: Boolean) {
+        _showApiKeyDialog.value = show
+    }
+
+    fun setShowApiKeyScreen(show: Boolean) {
+        _showApiKeyScreen.value = show
     }
 
     fun rotateDailyFact() {
@@ -185,7 +199,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 prompt = userText.ifBlank { "تکایە ئەم فایلە بە زمانی کوردی شیکاربکە و ڕوونی بکەوە." },
                 history = historyPairs,
                 attachmentBase64 = attachmentBase64,
-                attachmentMimeType = attachmentMime
+                attachmentMimeType = attachmentMime,
+                context = context
             ).collect { chunk ->
                 if (!hasStartedResponding) {
                     hasStartedResponding = true

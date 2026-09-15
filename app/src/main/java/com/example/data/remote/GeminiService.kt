@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.util.Base64
 import android.util.Log
 import com.example.BuildConfig
+import com.example.data.local.ApiKeyDataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -41,12 +42,33 @@ object GeminiService {
 5. هەمیشە بەڕێز، دۆستانە و خێرا وەڵام بدەرەوە.
 """
 
-    fun getApiKey(): String {
-        return BuildConfig.GEMINI_API_KEY
+    private const val PREFS_NAME = "basit_ai_prefs"
+    private const val PREF_KEY_GEMINI = "custom_gemini_api_key"
+
+    fun getUserCustomKey(context: android.content.Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        return prefs.getString(PREF_KEY_GEMINI, "") ?: ""
     }
 
-    fun isApiKeyConfigured(): Boolean {
-        val key = getApiKey()
+    fun saveUserCustomKey(context: android.content.Context, key: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        prefs.edit().putString(PREF_KEY_GEMINI, key.trim()).apply()
+    }
+
+    fun getApiKey(context: android.content.Context? = null): String {
+        if (context != null) {
+            val custom = getUserCustomKey(context)
+            if (custom.isNotBlank()) return custom
+        }
+        val buildKey = BuildConfig.GEMINI_API_KEY
+        if (buildKey.isNotBlank() && buildKey != "MY_GEMINI_API_KEY") {
+            return buildKey
+        }
+        return ""
+    }
+
+    fun isApiKeyConfigured(context: android.content.Context? = null): Boolean {
+        val key = getApiKey(context)
         return key.isNotBlank() && key != "MY_GEMINI_API_KEY"
     }
 
@@ -66,11 +88,15 @@ object GeminiService {
         prompt: String,
         history: List<Pair<String, String>> = emptyList(), // role ("user"/"model") to content
         attachmentBase64: String? = null,
-        attachmentMimeType: String? = null
+        attachmentMimeType: String? = null,
+        context: android.content.Context? = null
     ): Flow<String> = flow {
-        val apiKey = getApiKey()
-        if (!isApiKeyConfigured()) {
-            emit("تکایە کلیلی تایبەتی Gemini API لە پەڕەی نهێنییەکان (Secrets) لە کۆنسۆڵی AI Studio دابنێ تاکو Basit AI بتوانێت ڕاستەوخۆ وەڵام بداتەوە.\n\nئەگەر کلیلەکە دانراوە، دەتوانیت ئێستا دەست پێبکەیت!")
+        var apiKey = getApiKey(context)
+        if (apiKey.isBlank() && context != null) {
+            apiKey = ApiKeyDataStore.getApiKey(context)
+        }
+        if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+            emit("تکایە کلیلی تایبەتی Gemini API لە دوگمەی کلیلی 🔑 سەرەوە لە ئەپەکە دابنێ تاوەکو Basit AI ڕاستەوخۆ وەڵام بداتەوە.")
             return@flow
         }
 

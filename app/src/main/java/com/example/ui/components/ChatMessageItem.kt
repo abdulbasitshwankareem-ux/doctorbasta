@@ -30,11 +30,14 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -86,6 +89,7 @@ fun ChatMessageItem(
     onRegenerate: () -> Unit,
     onCreatePdf: (String) -> Unit,
     onCreateExcel: (String) -> Unit,
+    onOpenApiKeyDialog: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isUser = message.role == "user"
@@ -180,6 +184,31 @@ fun ChatMessageItem(
                         text = message.content,
                         isUser = isUser
                     )
+
+                    // If missing API key prompt, display quick action button
+                    if (!isUser && message.content.contains("Gemini API")) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = onOpenApiKeyDialog,
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Key,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "دانانی کلیلی API لێرە",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
 
                     // Generated File Card (PDF, Excel, TXT, etc.)
                     if (!message.generatedFilePath.isNullOrBlank()) {
